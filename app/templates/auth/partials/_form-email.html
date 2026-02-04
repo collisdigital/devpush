@@ -1,8 +1,8 @@
 <form
   method="post"
-  action="{{ url_for('auth_login') }}"
+  action="{{ rel_url_for('auth_login') }}"
   class="form grid gap-4"
-  hx-post="{{ url_for('auth_login') }}"
+  hx-post="{{ rel_url_for('auth_login') }}"
   hx-swap="outerHTML"
   hx-indicator="find .htmx-indicator"
   hx-swap="outerHTML"

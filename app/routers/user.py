@@ -32,6 +32,7 @@ from forms.user import (
 )
 from forms.team import TeamLeaveForm, TeamInviteAcceptForm
 from utils.email import send_email
+from utils.urls import get_relative_url, get_app_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ async def user_settings(
                 )
 
         return RedirectResponse(
-            url=str(request.url_for("user_settings")) + "#danger",
+            url=str(get_relative_url(request, "user_settings")) + "#danger",
             status_code=303,
         )
 
@@ -156,11 +157,11 @@ async def user_settings(
 
             # Redirect if the name has changed
             if old_username != current_user.username:
-                new_url = request.url_for("user_settings")
+                new_url = str(get_relative_url(request, "user_settings"))
 
                 if request.headers.get("HX-Request"):
                     return Response(
-                        status_code=200, headers={"HX-Redirect": str(new_url)}
+                        status_code=200, headers={"HX-Redirect": new_url}
                     )
                 else:
                     return RedirectResponse(new_url, status_code=303)
@@ -203,11 +204,7 @@ async def user_settings(
                 else change_token
             )
 
-            verify_link = str(
-                request.url_for("auth_email_verify").include_query_params(
-                    token=change_token_str
-                )
-            )
+            verify_link = f"{get_app_base_url(request)}{get_relative_url(request, 'auth_email_verify').include_query_params(token=change_token_str)}"
 
             try:
                 await redis.setex(
@@ -215,6 +212,10 @@ async def user_settings(
                     settings.magic_link_ttl_seconds,
                     "1",
                 )
+                email_logo = settings.email_logo
+                if not email_logo:
+                    email_logo = f"{get_app_base_url(request)}{get_relative_url(request, 'assets', path='logo-email.png')}"
+
                 send_email(
                     recipients=[new_email],
                     subject=_("Verify your new email address"),
@@ -226,11 +227,10 @@ async def user_settings(
                             "magic_link_ttl_minutes": max(
                                 1, settings.magic_link_ttl_seconds // 60
                             ),
-                            "email_logo": settings.email_logo
-                            or request.url_for("assets", path="logo-email.png"),
+                            "email_logo": email_logo,
                             "app_name": settings.app_name,
                             "app_description": settings.app_description,
-                            "app_url": f"{settings.url_scheme}://{settings.app_hostname}",
+                            "app_url": get_app_base_url(request),
                         }
                     ),
                     settings=settings,
@@ -477,7 +477,7 @@ async def user_notifications(
                 )
 
                 return RedirectResponseX(
-                    str(request.url_for("team_index", team_slug=invite.team.slug)),
+                    get_relative_url(request, "team_index", team_slug=invite.team.slug),
                     status_code=303,
                     request=request,
                 )

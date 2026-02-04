@@ -13,7 +13,7 @@ from dependencies import (
 )
 from models import User, UserIdentity
 from utils.user import get_user_by_provider
-from utils.urls import safe_redirect
+from utils.urls import safe_redirect, get_relative_url, get_app_base_url
 
 router = APIRouter(prefix="/api/google")
 
@@ -43,7 +43,7 @@ async def google_authorize(
     request.session["redirect_after_google"] = redirect_url
 
     return await oauth_client.google.authorize_redirect(
-        request, request.url_for("google_authorize_callback")
+        request, f"{get_app_base_url(request)}{get_relative_url(request, 'google_authorize_callback')}"
     )
 
 
