@@ -26,7 +26,7 @@ async def google_authorize(
     oauth_client=Depends(get_google_oauth_client),
 ):
     """Authorize Google OAuth for account linking"""
-    if not oauth_client.google:
+    if not oauth_client or not oauth_client.google:
         flash(request, _("Google OAuth not configured."), "error")
         redirect_url = safe_redirect(
             request,
@@ -62,7 +62,7 @@ async def google_authorize_callback(
         referer=None,
     )
 
-    if not oauth_client.google:
+    if not oauth_client or not oauth_client.google:
         flash(request, _("Google OAuth not configured."), "error")
         return RedirectResponse(redirect_url, status_code=303)
 

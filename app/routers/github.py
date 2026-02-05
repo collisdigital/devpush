@@ -183,7 +183,7 @@ async def github_authorize(
     oauth_client=Depends(get_github_oauth_client),
 ):
     """Authorize GitHub OAuth for account linking"""
-    if not oauth_client.github:
+    if not oauth_client or not oauth_client.github:
         flash(request, _("GitHub OAuth not configured."), "error")
         redirect_url = safe_redirect(
             request,
@@ -220,7 +220,7 @@ async def github_authorize_callback(
         referer=None,
     )
 
-    if not oauth_client.github:
+    if not oauth_client or not oauth_client.github:
         flash(request, _("GitHub OAuth not configured."), "error")
         return RedirectResponse(redirect_url, status_code=303)
 
