@@ -181,6 +181,10 @@
         }"
       >
         {{ add_member_form.csrf_token() }}
+        {{ add_member_form.client_origin(id="client_origin_invite") }}
+        <script>
+          document.getElementById('client_origin_invite').value = window.location.origin;
+        </script>
         <div class="flex items-center gap-x-2">
           {{ add_member_form.email.label(class="sr-only") }}
           {{ add_member_form.email(class="flex-1 input", placeholder=_("Enter email to invite"), **{"x-model": "email"}) }}

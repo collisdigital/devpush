@@ -33,7 +33,7 @@ from forms.auth import EmailLoginForm
 from utils.email import send_email
 from utils.user import sanitize_username, get_user_by_email, get_user_by_provider
 from utils.access import is_email_allowed, notify_denied
-from utils.urls import get_relative_url, get_app_base_url
+from utils.urls import get_relative_url, get_app_base_url, get_absolute_url, get_email_logo_url
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +186,11 @@ async def auth_login(
             else magic_token
         )
 
-        verify_link = f"{get_app_base_url(request)}{get_relative_url(request, 'auth_email_verify').include_query_params(token=magic_token_str)}"
+        verify_link = str(
+            get_absolute_url(
+                request, "auth_email_verify", client_origin=form.client_origin.data
+            ).include_query_params(token=magic_token_str)
+        )
 
         try:
             await redis.setex(
@@ -208,9 +212,7 @@ async def auth_login(
             )
 
         try:
-            email_logo = settings.email_logo
-            if not email_logo:
-                email_logo = f"{get_app_base_url(request)}{get_relative_url(request, 'assets', path='logo-email.png')}"
+            email_logo = get_email_logo_url(request, settings, client_origin=form.client_origin.data)
 
             send_email(
                 recipients=[email],
@@ -226,7 +228,7 @@ async def auth_login(
                         "email_logo": email_logo,
                         "app_name": settings.app_name,
                         "app_description": settings.app_description,
-                        "app_url": get_app_base_url(request),
+                        "app_url": get_app_base_url(request, client_origin=form.client_origin.data),
                     }
                 ),
                 settings=settings,
@@ -470,7 +472,7 @@ async def auth_github_login(
             status_code=500, detail="GitHub OAuth client not configured"
         )
     return await oauth_client.github.authorize_redirect(
-        request, f"{get_app_base_url(request)}{get_relative_url(request, 'auth_github_callback')}"
+        request, str(get_absolute_url(request, 'auth_github_callback'))
     )
 
 
@@ -556,7 +558,7 @@ async def auth_google_login(
             status_code=500, detail="Google OAuth client not configured"
         )
     return await oauth_client.google.authorize_redirect(
-        request, f"{get_app_base_url(request)}{get_relative_url(request, 'auth_google_callback')}"
+        request, str(get_absolute_url(request, 'auth_google_callback'))
     )
 
 

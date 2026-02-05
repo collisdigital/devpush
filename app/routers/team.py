@@ -879,7 +879,14 @@ async def team_settings(
             )
             db.add(invite)
             await db.commit()
-            _send_member_invite(request, invite, team, current_user, settings)
+            _send_member_invite(
+                request,
+                invite,
+                team,
+                current_user,
+                settings,
+                client_origin=add_member_form.client_origin.data,
+            )
 
     remove_member_form: Any = await TeamMemberRemoveForm.from_formdata(request)
 
@@ -1042,6 +1049,7 @@ def _send_member_invite(
     team: Team,
     current_user: User,
     settings: Settings,
+    client_origin: str | None = None,
 ):
     expires_at = utc_now() + timedelta(days=30)
     token_payload = {
@@ -1058,13 +1066,16 @@ def _send_member_invite(
         if isinstance(invite_token, bytes)
         else invite_token
     )
-    invite_link = get_absolute_url(
-        request,
-        "auth_email_verify",
-    ) + f"?token={invite_token_str}"
+    invite_link = str(
+        get_absolute_url(
+            request,
+            "auth_email_verify",
+            client_origin=client_origin,
+        ).include_query_params(token=invite_token_str)
+    )
 
     try:
-        email_logo = get_email_logo_url(request, settings)
+        email_logo = get_email_logo_url(request, settings, client_origin=client_origin)
 
         send_email(
             recipients=[invite.email],
@@ -1082,7 +1093,7 @@ def _send_member_invite(
                     "email_logo": email_logo,
                     "app_name": settings.app_name,
                     "app_description": settings.app_description,
-                    "app_url": get_app_base_url(request),
+                    "app_url": get_app_base_url(request, client_origin=client_origin),
                 }
             ),
             settings=settings,

@@ -204,10 +204,13 @@ async def user_settings(
                 else change_token
             )
 
-            verify_link = get_absolute_url(
-                request,
-                "auth_email_verify",
-            ) + f"?token={change_token_str}"
+            verify_link = str(
+                get_absolute_url(
+                    request,
+                    "auth_email_verify",
+                    client_origin=email_form.client_origin.data,
+                ).include_query_params(token=change_token_str)
+            )
 
             try:
                 await redis.setex(
@@ -215,7 +218,7 @@ async def user_settings(
                     settings.magic_link_ttl_seconds,
                     "1",
                 )
-                email_logo = get_email_logo_url(request, settings)
+                email_logo = get_email_logo_url(request, settings, client_origin=email_form.client_origin.data)
 
                 send_email(
                     recipients=[new_email],
@@ -231,7 +234,7 @@ async def user_settings(
                             "email_logo": email_logo,
                             "app_name": settings.app_name,
                             "app_description": settings.app_description,
-                            "app_url": get_app_base_url(request),
+                            "app_url": get_app_base_url(request, client_origin=email_form.client_origin.data),
                         }
                     ),
                     settings=settings,

@@ -11,6 +11,10 @@
   @htmx:after-request="loading = null"
 >
   {{ form.csrf_token }}
+  {{ form.client_origin(id="client_origin") }}
+  <script>
+    document.getElementById('client_origin').value = window.location.origin;
+  </script>
   <div class="grid gap-2">
     {{ form.email.label(class="sr-only") }}
     {{ form.email(

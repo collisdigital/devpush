@@ -13,6 +13,10 @@
   class="card"
 >
   {{ email_form.csrf_token() }}
+  {{ email_form.client_origin(id="client_origin_email") }}
+  <script>
+    document.getElementById('client_origin_email').value = window.location.origin;
+  </script>
   <header class="border-b">
     <h2>{{ _("Email") }}</h2>
     <p>{{ _("The email address used for authentication and notifications.") }}</p>

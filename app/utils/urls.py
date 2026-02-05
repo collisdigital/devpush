@@ -121,43 +121,56 @@ def get_relative_url(request: Request, name: str, **path_params: Any) -> Relativ
     return RelativeURL(request.url_for(name, **path_params))
 
 
-def get_app_base_url(request: Request) -> str:
+def get_app_base_url(request: Request, client_origin: str | None = None) -> str:
     """
     Determines the application base URL (scheme + hostname), trying to resolve
     the public URL if running behind a proxy or in Codespaces.
     """
     settings = get_settings()
 
-    # 1. Trust APP_HOSTNAME if set and not generic localhost
+    # 1. Trust client_origin ONLY if we are in a local environment
+    if client_origin and settings.app_hostname in ("localhost", "127.0.0.1", "0.0.0.0"):
+        return client_origin.rstrip("/")
+
+    # 2. Trust APP_HOSTNAME if set and not generic localhost
     if settings.app_hostname and "localhost" not in settings.app_hostname and settings.app_hostname != "127.0.0.1":
         scheme = settings.url_scheme
         return f"{scheme}://{settings.app_hostname}"
 
-    # 2. Try X-Forwarded-Host (standard for proxies like Traefik/Codespaces)
+    # 3. Try X-Forwarded-Host (standard for proxies like Traefik/Codespaces)
     forwarded_host = request.headers.get("x-forwarded-host")
     if forwarded_host:
         # Codespaces/Proxies usually set X-Forwarded-Proto too
         scheme = request.headers.get("x-forwarded-proto", settings.url_scheme)
         return f"{scheme}://{forwarded_host}"
 
-    # 3. Fallback to request.base_url (which is absolute)
+    # 4. Fallback to request.base_url (which is absolute)
     return str(request.base_url).rstrip("/")
 
 
-def get_absolute_url(request: Request, name: str, **path_params: Any) -> str:
+def get_absolute_url(
+    request: Request, name: str, client_origin: str | None = None, **path_params: Any
+) -> URL:
     """
     Generates an absolute URL for a named route, using the resolved base URL.
+    Returns a starlette.datastructures.URL object.
     """
-    base_url = get_app_base_url(request)
+    base_url = get_app_base_url(request, client_origin=client_origin)
     relative_url = get_relative_url(request, name, **path_params)
-    return f"{base_url}{relative_url}"
+    return URL(f"{base_url}{relative_url}")
 
 
-def get_email_logo_url(request: Request, settings: Settings) -> str:
+def get_email_logo_url(
+    request: Request, settings: Settings, client_origin: str | None = None
+) -> str:
     """
     Determines the URL for the email logo.
     """
     email_logo = settings.email_logo
     if not email_logo:
-        email_logo = get_absolute_url(request, "assets", path="logo-email.png")
+        email_logo = str(
+            get_absolute_url(
+                request, "assets", client_origin=client_origin, path="logo-email.png"
+            )
+        )
     return email_logo
