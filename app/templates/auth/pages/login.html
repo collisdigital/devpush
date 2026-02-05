@@ -34,9 +34,7 @@
           class="btn-outline w-full"
           @click="
             loading = 'google';
-            const url = new URL('{{ rel_url_for('auth_google_login') }}', window.location.origin);
-            url.searchParams.set('client_origin', window.location.origin);
-            window.location.href = url.toString();
+            window.location.href = '{{ rel_url_for('auth_google_login') }}' + '?client_origin=' + encodeURIComponent(window.location.origin);
           "
           :disabled="loading"
         >
