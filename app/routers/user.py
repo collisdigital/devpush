@@ -32,7 +32,7 @@ from forms.user import (
 )
 from forms.team import TeamLeaveForm, TeamInviteAcceptForm
 from utils.email import send_email
-from utils.urls import get_relative_url, get_app_base_url
+from utils.urls import get_relative_url, get_app_base_url, get_absolute_url, get_email_logo_url
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +204,10 @@ async def user_settings(
                 else change_token
             )
 
-            verify_link = f"{get_app_base_url(request)}{get_relative_url(request, 'auth_email_verify').include_query_params(token=change_token_str)}"
+            verify_link = get_absolute_url(
+                request,
+                "auth_email_verify",
+            ) + f"?token={change_token_str}"
 
             try:
                 await redis.setex(
@@ -212,9 +215,7 @@ async def user_settings(
                     settings.magic_link_ttl_seconds,
                     "1",
                 )
-                email_logo = settings.email_logo
-                if not email_logo:
-                    email_logo = f"{get_app_base_url(request)}{get_relative_url(request, 'assets', path='logo-email.png')}"
+                email_logo = get_email_logo_url(request, settings)
 
                 send_email(
                     recipients=[new_email],

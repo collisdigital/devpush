@@ -39,7 +39,7 @@ from db import get_db
 from utils.pagination import paginate
 from utils.email import send_email
 from utils.team import get_latest_teams
-from utils.urls import get_relative_url, get_app_base_url
+from utils.urls import get_relative_url, get_app_base_url, get_absolute_url, get_email_logo_url
 from forms.team import (
     TeamDeleteForm,
     TeamGeneralForm,
@@ -1058,12 +1058,13 @@ def _send_member_invite(
         if isinstance(invite_token, bytes)
         else invite_token
     )
-    invite_link = f"{get_app_base_url(request)}{get_relative_url(request, 'auth_email_verify').include_query_params(token=invite_token_str)}"
+    invite_link = get_absolute_url(
+        request,
+        "auth_email_verify",
+    ) + f"?token={invite_token_str}"
 
     try:
-        email_logo = settings.email_logo
-        if not email_logo:
-            email_logo = f"{get_app_base_url(request)}{get_relative_url(request, 'assets', path='logo-email.png')}"
+        email_logo = get_email_logo_url(request, settings)
 
         send_email(
             recipients=[invite.email],

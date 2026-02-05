@@ -4,7 +4,7 @@ from typing import Any, Union, List
 from fastapi import Request
 from starlette.datastructures import URL
 
-from config import get_settings
+from config import get_settings, Settings
 
 
 def _validated_redirect_target(
@@ -142,3 +142,22 @@ def get_app_base_url(request: Request) -> str:
 
     # 3. Fallback to request.base_url (which is absolute)
     return str(request.base_url).rstrip("/")
+
+
+def get_absolute_url(request: Request, name: str, **path_params: Any) -> str:
+    """
+    Generates an absolute URL for a named route, using the resolved base URL.
+    """
+    base_url = get_app_base_url(request)
+    relative_url = get_relative_url(request, name, **path_params)
+    return f"{base_url}{relative_url}"
+
+
+def get_email_logo_url(request: Request, settings: Settings) -> str:
+    """
+    Determines the URL for the email logo.
+    """
+    email_logo = settings.email_logo
+    if not email_logo:
+        email_logo = get_absolute_url(request, "assets", path="logo-email.png")
+    return email_logo
