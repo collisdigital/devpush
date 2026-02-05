@@ -3,10 +3,10 @@
   "configurations": [
     {
       "name": "Python: Remote Attach",
-      "type": "python",
+      "type": "debugpy",
       "request": "attach",
       "connect": {
-        "host": "app",
+        "host": "localhost",
         "port": 5678
       },
       "pathMappings": [
@@ -15,6 +15,7 @@
           "remoteRoot": "/app"
         }
       ],
+      "subProcess": true,
       "justMyCode": true
     }
   ]
