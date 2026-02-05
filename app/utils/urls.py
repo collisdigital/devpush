@@ -129,7 +129,7 @@ def get_app_base_url(request: Request, client_origin: str | None = None) -> str:
     settings = get_settings()
 
     # 1. Trust client_origin ONLY if we are in a local environment
-    if client_origin and settings.app_hostname in ("localhost", "127.0.0.1", "0.0.0.0"):
+    if client_origin and settings.app_hostname in ("localhost", "127.0.0.1"):
         return client_origin.rstrip("/")
 
     # 2. Trust APP_HOSTNAME if set and not generic localhost
