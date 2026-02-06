@@ -233,15 +233,7 @@ async def github_authorize_callback(
         return RedirectResponse(redirect_url, status_code=303)
 
     try:
-        client_origin = request.session.pop("github_link_client_origin", None)
-        redirect_uri = str(
-            get_absolute_url(
-                request, "github_authorize_callback", client_origin=client_origin
-            )
-        )
-        token = await oauth_client.github.authorize_access_token(
-            request, redirect_uri=redirect_uri
-        )
+        token = await oauth_client.github.authorize_access_token(request)
         response = await oauth_client.github.get("user", token=token)
         github_user = response.json()
 
